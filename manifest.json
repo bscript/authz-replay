@@ -4,8 +4,20 @@
   "version": "0.5.0",
   "description": "In-browser access-control tester for authorized security testing. Capture two sessions, browse as the owner, and silently replay each request as a lower-priv identity and unauthenticated to find IDOR / BOLA / BFLA.",
   "minimum_chrome_version": "116",
+  "icons": {
+    "16": "src/icons/icon16.png",
+    "32": "src/icons/icon32.png",
+    "48": "src/icons/icon48.png",
+    "128": "src/icons/icon128.png"
+  },
   "action": {
-    "default_title": "AuthZ Replayer (open side panel)"
+    "default_title": "AuthZ Replayer (open side panel)",
+    "default_icon": {
+      "16": "src/icons/icon16.png",
+      "32": "src/icons/icon32.png",
+      "48": "src/icons/icon48.png",
+      "128": "src/icons/icon128.png"
+    }
   },
   "side_panel": {
     "default_path": "src/sidepanel/sidepanel.html"

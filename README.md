@@ -54,7 +54,6 @@ single identity there is nothing to test against.
 1. `chrome://extensions` -> enable **Developer mode**.
 2. **Load unpacked** -> select this folder (the one with `manifest.json`).
 3. Pin the extension and click its icon to open the **side panel** on the right.
-   (No icon art is bundled - Chrome shows a placeholder.)
 
 ## Usage walkthrough
 
