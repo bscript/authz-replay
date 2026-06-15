@@ -4,6 +4,8 @@ An in-browser **access-control tester** for finding broken object-level (IDOR /
 BOLA) and function-level (BFLA / privilege-escalation) authorization bugs -
 without firing up Burp Suite + Autorize.
 
+<img alt="Image" src="https://github.com/user-attachments/assets/303037d1-313c-4ca0-9b0e-8fc4286ad7a6" />
+
 > **For authorized security testing only.** Only use this against systems you
 > own or are explicitly authorized to test. Replaying *write* requests performs
 > the action for real (create / modify / delete / email / charge). A one-time
