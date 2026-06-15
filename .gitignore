@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# The deliberately-vulnerable test app is NOT part of the published extension.
+vuln-lab/
+
+# SQLite / local data
+*.db
+*.db-wal
+*.db-shm
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Build / packaging output
+dist/
+*.zip

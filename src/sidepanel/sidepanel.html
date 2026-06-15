@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div id="firstrun" class="overlay hidden">
+      <div class="modal">
+        <h2>Authorized testing only</h2>
+        <p>
+          AuthZ Replayer replays your requests as other identities to find broken
+          access control. Replaying <b>write</b> requests can create, modify, delete,
+          email, or charge - for real.
+        </p>
+        <p>
+          Only use this against systems you own or are explicitly authorized to test
+          (your own accounts, a bug-bounty program in scope, a staging environment).
+        </p>
+        <button id="ack" class="btn primary">I understand - for authorized testing</button>
+      </div>
+    </div>
+
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <svg class="logo" width="26" height="18" viewBox="0 0 28 18" aria-hidden="true">
+            <circle cx="10" cy="9" r="7" fill="none" stroke="#bdf24e" stroke-width="1.7" />
+            <circle cx="18" cy="9" r="7" fill="none" stroke="#ff5874" stroke-width="1.7" />
+          </svg>
+          <span class="brand-name">authz<span class="brand-slash">//</span>replay</span>
+        </div>
+        <div class="spacer"></div>
+        <button id="capture" class="btn primary" title="Snapshot the session you're logged in as in the active tab">+ Capture</button>
+        <button id="switch" class="btn ghost" title="Clear local cookies + storage (no /logout) so you can log in as the next user">Switch user</button>
+        <button id="settings-btn" class="btn ghost" title="Settings">⚙</button>
+        <button id="export" class="btn ghost" title="Export the visible findings as a Markdown report">Export</button>
+        <button id="clear" class="btn ghost" title="Clear findings">Clear</button>
+      </header>
+
+      <section class="sessions-bar">
+        <span class="label" title="Click a session to browse as it (A). Use B to set the replay target.">Identities</span>
+        <div id="sessions" class="pills"></div>
+        <button id="clear-identities" class="btn ghost tiny hidden" title="Remove all captured identities">Clear all</button>
+      </section>
+
+      <section id="settings" class="settings hidden">
+        <div class="settings-head">
+          <span class="settings-title">Settings</span>
+          <button id="settings-close" class="x-btn" title="Close settings">×</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="enabled" /> Engine enabled</label>
+        <label class="toggle"><input type="checkbox" id="auto-get" /> Auto-replay GET / HEAD (safe). Writes are always manual.</label>
+        <label class="toggle"><input type="checkbox" id="skip-auth" /> Skip auth endpoints (login / logout / token / oauth ...).</label>
+
+        <div class="field">
+          <div class="sub">In-scope URL patterns (one per line, <code>*</code> = wildcard)</div>
+          <textarea id="include" placeholder="https://app.example.com/*"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">Exclude URL patterns</div>
+          <textarea id="exclude" placeholder="https://app.example.com/logout*"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">Custom auth header names (one per line)</div>
+          <textarea id="auth-headers" placeholder="X-Api-Key"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">Token storage keys to capture (localStorage / sessionStorage)</div>
+          <textarea id="token-keys" placeholder="access_token&#10;id_token"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">Owner markers (A's email / id / private values, one per line). If any shows up in B or unauth, it is flagged BYPASSED.</div>
+          <textarea id="owner-markers" placeholder="alice@example.com&#10;user_id_4815"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">CSRF header names auto-swapped to B's token on replay (one per line, blank to disable)</div>
+          <textarea id="csrf-headers" placeholder="X-CSRF-Token&#10;X-XSRF-TOKEN"></textarea>
+        </div>
+        <div class="field">
+          <div class="sub">Volatile fields stripped before diffing (regex, one per line)</div>
+          <textarea id="volatile" spellcheck="false"></textarea>
+        </div>
+        <div class="settings-foot">
+          <button id="save-settings" class="btn primary">Save settings</button>
+          <button id="reset-volatile" class="btn ghost" title="Restore default volatile patterns">Reset volatile</button>
+        </div>
+        <p class="hint">
+          Scope is empty by default - capturing a session auto-adds its origin.
+          Only in-scope requests are intercepted, replayed, and shown.
+        </p>
+      </section>
+
+      <section id="filters" class="filters">
+        <div id="verdict-chips" class="chips"></div>
+        <input id="search" type="search" placeholder="filter by URL…" />
+        <div id="laneview" class="seg" title="Lay request and response stacked, or side by side like Burp">
+          <button data-v="stacked" class="seg-btn">Stacked</button>
+          <button data-v="columns" class="seg-btn">Split</button>
+        </div>
+      </section>
+
+      <section id="seqbar" class="seqbar hidden">
+        <span id="seq-count" class="seq-count">0 selected</span>
+        <span class="spacer"></span>
+        <button id="seq-run" class="btn primary tiny" title="Replay the selected requests in order, sharing cookies between steps">Replay as sequence</button>
+        <button id="seq-clear" class="btn ghost tiny">Clear selection</button>
+      </section>
+
+      <section id="findings" class="findings"></section>
+    </div>
+
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

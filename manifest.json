@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "AuthZ Replayer",
+  "version": "0.5.0",
+  "description": "In-browser access-control tester for authorized security testing. Capture two sessions, browse as the owner, and silently replay each request as a lower-priv identity and unauthenticated to find IDOR / BOLA / BFLA.",
+  "minimum_chrome_version": "116",
+  "action": {
+    "default_title": "AuthZ Replayer (open side panel)"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/content/banner.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "permissions": [
+    "storage",
+    "cookies",
+    "browsingData",
+    "webRequest",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "scripting",
+    "sidePanel",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}
