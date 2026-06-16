@@ -590,6 +590,7 @@ function renderLane(r, lane, title, isOriginal, original) {
     `<span style="flex:1"></span>` +
     `<span class="kv">${lane.pending ? "replaying…" : `${lane.error ? "ERR" : lane.status} ${lane.durationMs != null ? "· " + lane.durationMs + "ms" : ""}`}</span>`;
   el.appendChild(top);
+  makeCollapsible(top); // click the lane header to fold the whole lane
 
   if (lane.pending) return el;
 
@@ -622,6 +623,7 @@ function renderLane(r, lane, title, isOriginal, original) {
   copywrap.appendChild(makeCopy("cURL", () => toCurl({ method: r.method, url: r.url, headers: lane.reqHeaders, body: lane.reqBody })));
   copywrap.appendChild(makeCopy("fetch", () => toFetch({ method: r.method, url: r.url, headers: lane.reqHeaders, body: lane.reqBody })));
   reqHead.appendChild(copywrap);
+  makeCollapsible(reqHead);
   reqSec.appendChild(reqHead);
   reqSec.appendChild(renderCode(buildRequestMessage(r, lane)));
   panes.appendChild(reqSec);
@@ -635,6 +637,7 @@ function renderLane(r, lane, title, isOriginal, original) {
   respHead.innerHTML =
     `<span>Response ${lane.status}${lane.statusText ? " " + esc(lane.statusText) : ""}${lane.redirected ? " (redirected)" : ""}</span>` +
     (showDiff ? `<span class="diff-tag">diff vs A</span>` : "");
+  makeCollapsible(respHead);
   respSec.appendChild(respHead);
 
   if (showDiff) {
@@ -646,6 +649,19 @@ function renderLane(r, lane, title, isOriginal, original) {
 
   el.appendChild(panes);
   return el;
+}
+
+// Make a pane sub-header click to collapse/expand its body. Copy buttons inside
+// the header stopPropagation, so they keep working without toggling.
+function makeCollapsible(head) {
+  head.classList.add("collapsible");
+  const caret = document.createElement("span");
+  caret.className = "caret";
+  caret.textContent = "▾";
+  head.insertBefore(caret, head.firstChild);
+  head.addEventListener("click", () => {
+    head.parentElement.classList.toggle("collapsed");
+  });
 }
 
 function makeCopy(label, getText) {

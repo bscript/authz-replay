@@ -183,11 +183,23 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 /* fill the (equal-height) pane but cap + scroll so big bodies stay visible */
 .panes.columns pre.body { flex: 1 1 auto; min-height: 0; max-height: 440px; overflow: auto; }
 .lane-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border-soft); }
+.lane-top.collapsible { cursor: pointer; user-select: none; -webkit-user-select: none; }
+.lane-top.collapsible:hover { background: var(--surface); }
+.lane.collapsed > *:not(.lane-top) { display: none; }
+.lane.collapsed .lane-top { border-bottom: none; }
+.lane.collapsed .lane-top .caret { transform: rotate(-90deg); }
 .lane-top .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px -1px currentColor; }
 .lane-title { font-family: var(--mono); font-weight: 700; font-size: 11px; }
 .lane-reason { color: var(--text-dim); font-size: 11px; padding: 7px 10px 0; line-height: 1.5; }
 .lane-section { padding: 7px 10px; }
 .lane-section .sub { margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.sub.collapsible { cursor: pointer; user-select: none; -webkit-user-select: none; }
+.sub.collapsible:hover { color: var(--text-dim); }
+.sub .caret { display: inline-block; transition: transform .12s; color: var(--text-faint); font-size: 9px; }
+.lane-section.collapsed .caret { transform: rotate(-90deg); }
+.lane-section.collapsed pre.body { display: none; }
+/* don't stretch a collapsed pane to match its neighbor in Split view */
+.panes.columns .lane-section.collapsed { align-self: start; }
 .copybtns { display: flex; gap: 8px; margin-left: auto; }
 pre.body { font-family: var(--mono); font-size: 10.5px; white-space: pre-wrap; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px; margin: 4px 0 0; max-height: 440px; overflow: auto; line-height: 1.5; }
 
