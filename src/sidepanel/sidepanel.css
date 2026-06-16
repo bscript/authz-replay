@@ -175,11 +175,12 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 /* Split (Burp-style) view: panes side by side, EQUAL height regardless of
    how small the request is. The grid stretches both panes to the tallest row,
    and each body fills its pane. */
-.panes.columns { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; max-height: 460px; }
-.panes.columns .pane { min-width: 0; display: flex; flex-direction: column; }
+.panes.columns { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+.panes.columns .pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .panes.columns .pane:first-child { border-right: 1px solid var(--border-soft); }
 .panes.columns .pane .sub { flex: none; }
-.panes.columns pre.body { flex: 1 1 auto; max-height: none; min-height: 0; }
+/* fill the (equal-height) pane but cap + scroll so big bodies stay visible */
+.panes.columns pre.body { flex: 1 1 auto; min-height: 0; max-height: 440px; overflow: auto; }
 .lane-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--border-soft); }
 .lane-top .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px -1px currentColor; }
 .lane-title { font-family: var(--mono); font-weight: 700; font-size: 11px; }
@@ -187,7 +188,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .lane-section { padding: 7px 10px; }
 .lane-section .sub { margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
 .copybtns { display: flex; gap: 8px; margin-left: auto; }
-pre.body { font-family: var(--mono); font-size: 10.5px; white-space: pre-wrap; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px; margin: 4px 0 0; max-height: 360px; overflow: auto; line-height: 1.5; }
+pre.body { font-family: var(--mono); font-size: 10.5px; white-space: pre-wrap; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px; margin: 4px 0 0; max-height: 440px; overflow: auto; line-height: 1.5; }
 
 /* Burp-style numbered message view */
 pre.code { padding: 6px 0; }
