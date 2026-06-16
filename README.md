@@ -2,7 +2,7 @@
 
 An in-browser **access-control tester** for finding broken object-level (IDOR /
 BOLA) and function-level (BFLA / privilege-escalation) authorization bugs -
-without firing up Burp Suite + Autorize.
+straight from your browser, no proxy setup required.
 
 <img alt="Image" src="https://github.com/user-attachments/assets/303037d1-313c-4ca0-9b0e-8fc4286ad7a6" />
 
@@ -80,7 +80,7 @@ single identity there is nothing to test against.
    [Owner markers](#owner-markers-the-strongest-signal).
 6. **Read findings** - click a row to expand the three lanes (Original A / Replay B
    / Unauthenticated). Each lane shows the full request + response with line
-   numbers (Burp-style), a git-style diff vs the owner's response, the verdict +
+   numbers and syntax highlighting, a git-style diff vs the owner's response, the verdict +
    reasoning, and **copy as cURL / fetch**. Use the override buttons to re-label
    after manual inspection.
 

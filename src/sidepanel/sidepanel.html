@@ -35,13 +35,13 @@
         <button id="switch" class="btn ghost" title="Clear local cookies + storage (no /logout) so you can log in as the next user">Switch user</button>
         <button id="settings-btn" class="btn ghost" title="Settings">⚙</button>
         <button id="export" class="btn ghost" title="Export the visible findings as a Markdown report">Export</button>
-        <button id="clear" class="btn ghost" title="Clear findings">Clear</button>
+        <button id="clear" class="btn ghost" title="Remove all captured requests &amp; findings. Identities are kept.">Clear requests</button>
       </header>
 
       <section class="sessions-bar">
         <span class="label" title="Click a session to browse as it (A). Use B to set the replay target.">Identities</span>
         <div id="sessions" class="pills"></div>
-        <button id="clear-identities" class="btn ghost tiny hidden" title="Remove all captured identities">Clear all</button>
+        <button id="clear-identities" class="btn ghost tiny hidden" title="Remove all captured identities. Requests are kept.">Clear identities</button>
       </section>
 
       <section id="settings" class="settings hidden">
@@ -94,7 +94,7 @@
       <section id="filters" class="filters">
         <div id="verdict-chips" class="chips"></div>
         <input id="search" type="search" placeholder="filter by URL…" />
-        <div id="laneview" class="seg" title="Lay request and response stacked, or side by side like Burp">
+        <div id="laneview" class="seg" title="Lay request and response stacked, or side by side">
           <button data-v="stacked" class="seg-btn">Stacked</button>
           <button data-v="columns" class="seg-btn">Split</button>
         </div>

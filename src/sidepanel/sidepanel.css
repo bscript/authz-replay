@@ -3,15 +3,15 @@
    warm near-black canvas, lime signature accent, console mono labels
    ============================================================ */
 :root {
-  --bg: #0c0e0c;
-  --surface: #151a15;
-  --surface-2: #1b211b;
-  --chrome: #0a0c0a;
-  --border: #283028;
-  --border-soft: #1c221c;
-  --text: #e8ece4;
-  --text-dim: #9aa498;
-  --text-faint: #6c7669;
+  --bg: #11150f;
+  --surface: #1c221a;
+  --surface-2: #262e23;
+  --chrome: #0d100c;
+  --border: #3a4537;
+  --border-soft: #2c342a;
+  --text: #eef2ea;
+  --text-dim: #b3bdac;
+  --text-faint: #8a947f;
   --accent: #bdf24e;          /* lime - primary actions / brand */
   --accent-dim: #93c534;
   --accent-ink: #0c0e0c;      /* text on accent */
@@ -167,12 +167,13 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .badge.PENDING { background: var(--surface-2); color: var(--text-faint); border: 1px solid var(--border); }
 
 .finding-body { padding: 8px 12px 13px; background: var(--bg); }
-.warn-box { border: 1px solid rgba(255,180,84,.4); background: rgba(255,180,84,.07); color: var(--amber); border-radius: var(--radius); padding: 9px 11px; font-size: 11px; line-height: 1.55; margin-bottom: 9px; }
+.warn-box { border: 1px solid rgba(255,180,84,.4); background: rgba(255,180,84,.07); color: var(--amber); border-radius: var(--radius); padding: 9px 11px; font-size: 11px; line-height: 1.55; margin-top: 10px; margin-bottom: 9px; }
+.warn-box .warn-note { margin-top: 6px; color: var(--text-dim); }
 .override { display: flex; align-items: center; gap: 6px; margin: 9px 0 2px; flex-wrap: wrap; }
 .override .label { margin-right: 2px; }
 
 .lane { border: 1px solid var(--border); border-radius: var(--radius); margin-top: 9px; overflow: hidden; background: var(--surface); }
-/* Split (Burp-style) view: panes side by side, EQUAL height regardless of
+/* Split view: panes side by side, EQUAL height regardless of
    how small the request is. The grid stretches both panes to the tallest row,
    and each body fills its pane. */
 .panes.columns { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
@@ -190,12 +191,40 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .copybtns { display: flex; gap: 8px; margin-left: auto; }
 pre.body { font-family: var(--mono); font-size: 10.5px; white-space: pre-wrap; word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px; margin: 4px 0 0; max-height: 440px; overflow: auto; line-height: 1.5; }
 
-/* Burp-style numbered message view */
+/* numbered message view */
 pre.code { padding: 6px 0; }
 .cline { display: flex; }
 .cline .lno { flex: none; width: 36px; text-align: right; padding: 0 9px 0 4px; color: var(--text-faint); user-select: none; -webkit-user-select: none; border-right: 1px solid var(--border-soft); margin-right: 10px; }
 .cline .ltext { flex: 1; white-space: pre-wrap; word-break: break-all; min-width: 0; }
 .cline:hover { background: rgba(255,255,255,.03); }
+
+/* syntax-highlight tokens (request/response coloring) */
+.tok-method { color: var(--accent); font-weight: 700; }
+.tok-url    { color: var(--text); }
+.tok-proto  { color: var(--text-dim); font-weight: 700; }
+.tok-status { font-weight: 700; }
+.tok-status.s2 { color: var(--green); }
+.tok-status.s3 { color: var(--cyan); }
+.tok-status.s4 { color: var(--red); }
+.tok-stext  { color: var(--text-dim); }
+.tok-hname  { color: var(--cyan); }
+.tok-authname { color: var(--amber); font-weight: 700; }
+.tok-hval   { color: var(--text); }
+/* credentials: authorization tokens, session cookies, api keys */
+.tok-scheme { color: #c792ea; font-weight: 700; }
+.tok-cred   { color: var(--amber); background: rgba(255,180,84,.10); border-radius: 3px; padding: 0 2px; }
+.tok-jwt-h  { color: var(--cyan); }
+.tok-jwt-p  { color: var(--amber); }
+.tok-jwt-s  { color: var(--red); }
+.tok-cookie-name { color: #8ab4ff; }
+.tok-cookie-val  { color: var(--text); }
+.tok-cookie-attr { color: var(--text-faint); font-style: italic; }
+.tok-key    { color: #8ab4ff; }
+.tok-str    { color: var(--green); }
+.tok-num    { color: var(--amber); }
+.tok-bool   { color: #c792ea; }
+.tok-null   { color: #c792ea; }
+.tok-punc   { color: var(--text-faint); }
 
 /* git-style unified diff (single line-number gutter) */
 pre.gitdiff { padding: 6px 0; }

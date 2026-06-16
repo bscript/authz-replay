@@ -77,10 +77,15 @@ function wire() {
   $("#export").addEventListener("click", exportReport);
   $("#seq-run").addEventListener("click", replaySequence);
   $("#seq-clear").addEventListener("click", () => { selected.clear(); updateSeqBar(); renderRecords(); });
-  $("#clear").addEventListener("click", async () => { selected.clear(); state = await send("AZR_CLEAR"); renderAll(); });
+  $("#clear").addEventListener("click", async () => {
+    if (!confirm("Clear all captured requests & findings?\n\nYour saved identities are kept.")) return;
+    selected.clear();
+    state = await send("AZR_CLEAR");
+    renderAll();
+  });
   $("#clear-identities").addEventListener("click", async () => {
     if (!state.identities.length) return;
-    if (!confirm("Remove all captured identities? Findings are kept.")) return;
+    if (!confirm("Remove all captured identities?\n\nYour captured requests & findings are kept.")) return;
     state = await send("AZR_SAVE_IDENTITIES", { identities: [] });
     view = { mode: "records" };
     renderAll();
@@ -495,7 +500,8 @@ function renderDetail(r) {
     warn.className = "warn-box";
     warn.innerHTML =
       `<b>State-changing request.</b> Replaying re-issues it as A, B, and unauthenticated - ` +
-      `it may create, modify, delete, email, or charge. Only run on targets you're authorized to test.`;
+      `it may create, modify, delete, email, or charge.` +
+      `<div class="warn-note">Only run on targets you're authorized to test.</div>`;
     body.appendChild(warn);
   }
 
@@ -571,7 +577,7 @@ function renderLane(r, lane, title, isOriginal, original) {
     return el;
   }
 
-  // Request + Response panes (stacked, or side-by-side like Burp)
+  // Request + Response panes (stacked, or side-by-side)
   const panes = document.createElement("div");
   panes.className = "panes " + laneView;
 
@@ -645,11 +651,15 @@ function buildResponseMessage(lane) {
   return s;
 }
 
-// Burp-style message view: every line gets a number in a left gutter.
+// Numbered message view: every line gets a number in a left gutter, and the
+// text is syntax-highlighted (start line / headers / JSON body).
 function renderCode(text) {
   const pre = document.createElement("pre");
   pre.className = "body code";
   const lines = String(text).split("\n");
+  let section = "start";   // start -> headers -> body
+  let bodyStarted = false;
+  let bodyJson = false;
   lines.forEach((ln, i) => {
     const row = document.createElement("span");
     row.className = "cline";
@@ -658,12 +668,170 @@ function renderCode(text) {
     num.textContent = i + 1;
     const code = document.createElement("span");
     code.className = "ltext";
-    code.textContent = ln === "" ? " " : ln;
+
+    let html;
+    if (section === "start") {
+      html = hlStartLine(ln);
+      section = "headers";
+    } else if (section === "headers") {
+      if (ln === "") { section = "body"; html = ""; }
+      else html = hlHeader(ln);
+    } else {
+      if (!bodyStarted) { bodyStarted = true; bodyJson = /^\s*[{[]/.test(ln); }
+      html = ln === "" ? "" : (bodyJson ? hlJsonLine(ln) : esc(ln));
+    }
+    code.innerHTML = html === "" ? " " : html;
     row.appendChild(num);
     row.appendChild(code);
     pre.appendChild(row);
   });
   return pre;
+}
+
+function statusClass(code) {
+  const n = +code;
+  if (n >= 200 && n < 300) return "s2";
+  if (n >= 300 && n < 400) return "s3";
+  if (n >= 400) return "s4";
+  return "";
+}
+
+function hlStartLine(line) {
+  const resp = line.match(/^(HTTP)\s+(\d{3})?\s*(.*)$/);
+  if (resp) {
+    const code = resp[2] || "";
+    const tail = resp[3] || "";
+    return `<span class="tok-proto">${esc(resp[1])}</span>` +
+      (code ? ` <span class="tok-status ${statusClass(code)}">${esc(code)}</span>` : "") +
+      (tail ? ` <span class="tok-stext">${esc(tail)}</span>` : "");
+  }
+  const req = line.match(/^([A-Z]{2,8})\s+(.*)$/);
+  if (req) {
+    return `<span class="tok-method">${esc(req[1])}</span> <span class="tok-url">${esc(req[2])}</span>`;
+  }
+  return esc(line);
+}
+
+const CRED_HEADERS = new Set([
+  "authorization", "proxy-authorization", "authentication", "cookie", "set-cookie",
+  "x-api-key", "api-key", "x-auth-token", "x-access-token", "x-csrf-token",
+  "x-xsrf-token", "x-session-token", "x-amz-security-token",
+]);
+// cookie / token names that carry a session or credential
+const SESSION_NAME_RE = /sess|sid|token|jwt|auth|csrf|xsrf|secret|api[-_]?key/i;
+const JWT_RE = /eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/;
+
+function hlHeader(line) {
+  const idx = line.indexOf(":");
+  if (idx <= 0) return esc(line);
+  const name = line.slice(0, idx);
+  const val = line.slice(idx + 1);
+  const lname = name.trim().toLowerCase();
+  const isCred = CRED_HEADERS.has(lname);
+  const nameHtml =
+    `<span class="tok-hname${isCred ? " tok-authname" : ""}">${esc(name)}</span>` +
+    `<span class="tok-punc">:</span>`;
+  if (!val) return nameHtml;
+
+  let valHtml;
+  if (lname === "authorization" || lname === "proxy-authorization" || lname === "authentication") {
+    valHtml = hlAuthValue(val);
+  } else if (lname === "cookie") {
+    valHtml = hlCookieValue(val, false);
+  } else if (lname === "set-cookie") {
+    valHtml = hlCookieValue(val, true);
+  } else if (isCred) {
+    valHtml = esc(val.match(/^\s*/)[0]) + `<span class="tok-cred">${hlMaybeJwt(val.trimStart())}</span>`;
+  } else {
+    valHtml = `<span class="tok-hval">${hlMaybeJwt(val)}</span>`;
+  }
+  return nameHtml + valHtml;
+}
+
+// "Bearer <jwt>" / "Basic <b64>" -> scheme + credential token
+function hlAuthValue(val) {
+  const m = val.match(/^(\s*)(Bearer|Basic|Digest|Token|JWT|Negotiate|Hawk)(\s+)([\s\S]+)$/i);
+  if (m) {
+    return esc(m[1]) + `<span class="tok-scheme">${esc(m[2])}</span>` + esc(m[3]) + hlCredToken(m[4]);
+  }
+  return hlCredToken(val);
+}
+
+// a single credential token: split JWTs into header.payload.signature
+function hlCredToken(s) {
+  const lead = s.match(/^\s*/)[0];
+  const t = s.slice(lead.length);
+  const jwt = t.match(/^(eyJ[A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/);
+  if (jwt) {
+    return esc(lead) +
+      `<span class="tok-jwt-h">${esc(jwt[1])}</span><span class="tok-punc">.</span>` +
+      `<span class="tok-jwt-p">${esc(jwt[2])}</span><span class="tok-punc">.</span>` +
+      `<span class="tok-jwt-s">${esc(jwt[3])}</span>`;
+  }
+  return esc(lead) + `<span class="tok-cred">${esc(t)}</span>`;
+}
+
+// highlight a JWT if one appears anywhere inside an otherwise-plain value
+function hlMaybeJwt(s) {
+  const m = s.match(JWT_RE);
+  if (!m) return esc(s);
+  return esc(s.slice(0, m.index)) + hlCredToken(m[0]) + esc(s.slice(m.index + m[0].length));
+}
+
+// Cookie / Set-Cookie: name=value pairs; session-ish values colored as creds,
+// Set-Cookie attributes (Path, HttpOnly, Secure, Expires...) dimmed.
+function hlCookieValue(val, isSetCookie) {
+  const lead = val.match(/^\s*/)[0];
+  const parts = val.slice(lead.length).split(";");
+  const sep = `<span class="tok-punc">;</span>`;
+  const html = parts.map((part, i) => {
+    const lws = part.match(/^\s*/)[0];
+    const seg = part.slice(lws.length);
+    const eq = seg.indexOf("=");
+    if (isSetCookie && i > 0) {
+      if (eq >= 0) {
+        return esc(lws) +
+          `<span class="tok-cookie-attr">${esc(seg.slice(0, eq))}</span>` +
+          `<span class="tok-punc">=</span>` +
+          `<span class="tok-cookie-attr">${esc(seg.slice(eq + 1))}</span>`;
+      }
+      return esc(lws) + `<span class="tok-cookie-attr">${esc(seg)}</span>`;
+    }
+    if (eq < 0) return esc(part);
+    const cname = seg.slice(0, eq);
+    const cval = seg.slice(eq + 1);
+    const valClass = SESSION_NAME_RE.test(cname) ? "tok-cred" : "tok-cookie-val";
+    return esc(lws) +
+      `<span class="tok-cookie-name">${esc(cname)}</span>` +
+      `<span class="tok-punc">=</span>` +
+      `<span class="${valClass}">${hlMaybeJwt(cval)}</span>`;
+  }).join(sep);
+  return esc(lead) + html;
+}
+
+const JSON_TOKEN_RE = /"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\btrue\b|\bfalse\b|\bnull\b|[{}[\]]|,|:/g;
+function hlJsonLine(line) {
+  let out = "", last = 0, m;
+  JSON_TOKEN_RE.lastIndex = 0;
+  while ((m = JSON_TOKEN_RE.exec(line))) {
+    out += esc(line.slice(last, m.index));
+    const t = m[0];
+    if (t[0] === '"') {
+      const isKey = /^\s*:/.test(line.slice(JSON_TOKEN_RE.lastIndex));
+      out += `<span class="${isKey ? "tok-key" : "tok-str"}">${esc(t)}</span>`;
+    } else if (/^-?\d/.test(t)) {
+      out += `<span class="tok-num">${esc(t)}</span>`;
+    } else if (t === "true" || t === "false") {
+      out += `<span class="tok-bool">${esc(t)}</span>`;
+    } else if (t === "null") {
+      out += `<span class="tok-null">${esc(t)}</span>`;
+    } else {
+      out += `<span class="tok-punc">${esc(t)}</span>`;
+    }
+    last = JSON_TOKEN_RE.lastIndex;
+  }
+  out += esc(line.slice(last));
+  return out;
 }
 
 const DIFF_MAX_LINES = 800;
