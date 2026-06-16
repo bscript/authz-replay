@@ -62,6 +62,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .btn.danger:hover { border-color: var(--red); background: rgba(255,88,116,.08); }
 .btn.tiny { padding: 3px 8px; font-size: 10.5px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
+/* gear glyph renders small at body size - bump it and center it */
+#settings-btn { font-size: 17px; line-height: 1; padding: 4px 9px; }
 
 /* ---- micro labels ---- */
 .label, .sub { color: var(--text-faint); text-transform: uppercase; font-size: 9.5px; letter-spacing: 1px; font-family: var(--mono); font-weight: 600; }
