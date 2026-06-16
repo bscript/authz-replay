@@ -4,12 +4,15 @@ import { toCurl, toFetch } from "../lib/curl.js";
 
 const $ = (sel) => document.querySelector(sel);
 const ACK_KEY = "azr.ack";
+const ZOOM_KEY = "azr.zoom";
+const ZOOM_MIN = 0.6, ZOOM_MAX = 2.2, ZOOM_STEP = 0.1;
 
 let state = { identities: [], config: { includeScopes: [] }, records: [] };
 const expanded = new Set();
 const selected = new Set(); // record ids picked for sequence replay
 let filter = { verdict: "all", search: "" };
 let laneView = "stacked"; // "stacked" | "columns"
+let zoom = 1; // panel text/zoom factor (Cmd/Ctrl +/-/0), persisted
 // Main content area is either the records list or an inline identity editor.
 let view = { mode: "records" };
 
@@ -17,8 +20,10 @@ init();
 
 async function init() {
   await maybeFirstRun();
-  const lv = await chrome.storage.local.get("azr.laneView");
+  const lv = await chrome.storage.local.get(["azr.laneView", ZOOM_KEY]);
   laneView = lv["azr.laneView"] === "columns" ? "columns" : "stacked";
+  zoom = clampZoom(Number(lv[ZOOM_KEY]) || 1);
+  applyZoom();
   wire();
   updateLaneToggle();
   await refresh();
@@ -65,9 +70,34 @@ async function refresh() {
   renderAll();
 }
 
+function clampZoom(z) {
+  if (!Number.isFinite(z)) z = 1;
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
+}
+function applyZoom() {
+  document.documentElement.style.zoom = String(zoom);
+}
+async function setZoom(z) {
+  const next = clampZoom(z);
+  if (next === zoom) return;
+  zoom = next;
+  applyZoom();
+  await chrome.storage.local.set({ [ZOOM_KEY]: zoom });
+  toast(`Zoom ${Math.round(zoom * 100)}%`, "info");
+}
+
 /* --------------------------------------------------------------- wiring -- */
 
 function wire() {
+  // Cmd/Ctrl +/-/0 zoom the panel itself (browser page-zoom never reaches a
+  // side panel), persisted across reopen.
+  window.addEventListener("keydown", (e) => {
+    if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+    if (e.key === "=" || e.key === "+") { e.preventDefault(); setZoom(zoom + ZOOM_STEP); }
+    else if (e.key === "-" || e.key === "_") { e.preventDefault(); setZoom(zoom - ZOOM_STEP); }
+    else if (e.key === "0") { e.preventDefault(); setZoom(1); }
+  });
+
   $("#ack").addEventListener("click", async () => {
     await chrome.storage.local.set({ [ACK_KEY]: Date.now() });
     $("#firstrun").classList.add("hidden");
